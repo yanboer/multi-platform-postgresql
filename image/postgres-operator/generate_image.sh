@@ -37,6 +37,17 @@ build_image()
 			image="$namespace/$image"
 		fi
 
+		# do not override image tag
+		temp=($(echo $image | tr ":" " "))
+		imageName=${temp[0]}
+		imageTag=${temp[1]}
+		exists=$(curl --silent -f --head -lL https://hub.docker.com/v2/repositories/$imageName/tags/$imageTag/ > /dev/null && echo "success" || echo "failed")
+		if [ $platform == "all" -a "$exists" == "success" ]; then
+			echo "docker image $imageName:$imageTag exists on dockerhub, skiping ... "
+			cd -
+			return
+		fi
+
 		build_cmd="$build_cmd --push --platform linux/amd64,linux/arm64"
 	else
 		build_cmd="$build_cmd -o type=docker --platform linux/${platform}"

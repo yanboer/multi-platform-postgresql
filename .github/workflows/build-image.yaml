@@ -34,6 +34,7 @@ jobs:
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
   build-helm-package:
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:

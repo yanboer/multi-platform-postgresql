@@ -4,6 +4,7 @@ on: [push]
 
 jobs:
   format-code:
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:

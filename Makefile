@@ -17,6 +17,7 @@ export platform=amd64# make platform=arm64 build arm, make platform=all build an
 export pgversion=all# make pgversion=12 only build postgresql 12 that in versions.json field. make pgversion="'13' '14' '15'" build postgresql 13 14 15.
 export forcebuildimage=local# local/remote
 export namespace=radondb# used when make platform=all and no repositry namespace
+export forcebuildhelm=0# 1 is force build helm package
 
 ### make log
 # nohup make postgres-image &
@@ -49,9 +50,10 @@ helm-package:
 		awk -f jq-template.awk postgres-operator/Chart.yaml.template > postgres-operator/Chart.yaml; \
 		awk -f jq-template.awk postgres-operator/values.yaml.template > postgres-operator/values.yaml; \
 		/bin/rm postgres-operator/Chart.yaml.template postgres-operator/values.yaml.template;
-	helm package -d ./docs platforms/kubernetes/postgres-operator/deploy/postgres-operator/
+	helm package -d . platforms/kubernetes/postgres-operator/deploy/postgres-operator/
+	if [ "${forcebuildhelm}" = "1" ]; then echo "force build helm package ..." && mv *.tgz ./docs; else echo "build helm package if not exists ..." && cp -n *.tgz ./docs; fi
 	helm repo index --url https://radondb.github.io/multi-platform-postgresql/ ./docs
-	/bin/rm -rf platforms/kubernetes/postgres-operator/deploy/postgres-operator/
+	/bin/rm -rf platforms/kubernetes/postgres-operator/deploy/postgres-operator/ *.tgz
 exporter-image:
 	cp exporterversions.json image/exporter/versions.json
 	cd image/exporter; ./generate_image.sh

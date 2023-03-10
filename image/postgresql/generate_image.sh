@@ -25,7 +25,7 @@ build_image()
 
 	image_exists=$( docker image ls --format "{{.Repository}}:{{.Tag}}" | awk -v aaa=$image '{print $0} END{print aaa}' | grep -c $image )
 	if [ "$image_exists" -ne 1 ]; then
-		if [ "$forcebuildimage" = 1 ]; then
+		if [ "$forcebuildimage" ]; then
 			echo "docker image $image exists, rebuilding the image ..."
 		else
 			echo "docker image $image exists, skiping ..."
@@ -73,10 +73,14 @@ build_image()
 		imageName=${temp[0]}
 		imageTag=${temp[1]}
 		exists=$(curl --silent -f --head -lL https://hub.docker.com/v2/repositories/$imageName/tags/$imageTag/ > /dev/null && echo "success" || echo "failed")
-		if [ $platform == "all" -a "$exists" == "success" ]; then
-			echo "docker image $imageName:$imageTag exists on dockerhub, skiping ... "
-			cd -
-			return
+		if [ "$exists" == "success" ]; then
+			if [ "$forcebuildimage" != "remote" ]; then
+				echo "docker image $imageName:$imageTag exists on dockerhub, skiping ... "
+				cd -
+				return
+			else
+				echo "docker image $imageName:$imageTag exists on dockerhub, rebuild image ..."
+			fi
 		fi
 
 		build_cmd="$build_cmd --push --platform linux/amd64,linux/arm64"
